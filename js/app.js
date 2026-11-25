@@ -155,7 +155,8 @@
     if (opt.search && st.q) { const q = st.q.toLowerCase(); list = list.filter(r => opt.search(r).toLowerCase().indexOf(q) >= 0); }
     if (st.sort) {
       const c = cols.find(x => x.key === st.sort) || cols[0], g = c.get || (r => r[c.key]);
-      list = list.slice().sort((a, b) => cmp(g(a), g(b), st.asc));
+      const tie = (opt.tie || []).filter(k => k !== st.sort);
+      list = list.slice().sort((a, b) => cmp(g(a), g(b), st.asc) || tie.reduce((r, k) => r || cmp(a[k], b[k], false), 0));
     }
     let tot = null;
     if (opt.totals !== false) {
@@ -256,7 +257,7 @@
     const adsCost = rows.filter(r => r.unit.indexOf('ads:') === 0).reduce((s, r) => s + r.cost, 0);
     const unk = (dc['Не определено'] || {}).total || D.zero();
     const costsEmpty = /пусто/i.test(statusOf('Затраты'));
-    let h = pageTitle('Общая сводка', 'Маркетинг за период', `${esc(D.rangeLabel(S.from, S.to))}. Все цифры считаются по видимым фильтрам.`);
+    let h = pageTitle('Сводка · ' + D.rangeLabel(S.from, S.to), 'Сколько вложили и сколько вернулось', `${esc(filterHeading())}. Все цифры считаются по выбранным фильтрам.`);
     h += `<div class="kpi-grid">` +
       kpi('Охват', M('reach', t.reach), 'публикации и показы рекламы') +
       kpi('Регистрации в бота', M('registrations', t.registrations), 'регистрация → анкета ' + M('regToForm', t.regToForm)) +
@@ -271,17 +272,6 @@
       <span>В amoCRM у сделки нет метки или кода, поэтому направление не определено.</span><button type="button" data-tab="quality">Подробнее</button></div>`;
     if (costsEmpty) h += `<div class="alert info"><strong>Затраты команды не внесены</strong><span>ROMI и окупаемость сейчас считаются только по рекламе. Зарплаты и подрядчиков вносят в лист «Затраты».</span><a href="${esc(db.sheetUrl || C.SHEET_URL)}" target="_blank" rel="noreferrer">Открыть таблицу ↗</a></div>`;
 
-    h += planSummary();
-
-    h += `<div class="panel"><div class="panel-head"><div><h2>Направления</h2><p>Нажмите на карточку, чтобы открыть направление.</p></div></div><div class="direction-grid">` +
-      DIRS.filter(d => !S.dirs || S.dirs.has(d)).map(d => {
-        const x = (dc[d] || {}).total || D.derive(D.zero());
-        return `<button type="button" class="direction-card ${DIR_CLASS[d]}" data-tab="${TAB_OF_DIR[d]}"><header><span>${esc(d)}</span><b>${share(x.forms, t.forms)} анкет</b></header><dl>
-          <dt>Регистрации</dt><dd>${M('registrations', x.registrations)}</dd><dt>Анкеты</dt><dd>${M('forms', x.forms)}</dd>
-          <dt>Валидные</dt><dd>${M('valid', x.valid)}</dd><dt>Продажи</dt><dd>${M('sales', x.sales)}</dd>
-          <dt>Сумма продаж</dt><dd>${M('revenue', x.revenue)}</dd><dt>Затраты</dt><dd>${M('cost', x.cost)}</dd><dt>CPL</dt><dd>${M('cpl', x.cpl)}</dd></dl></button>`;
-      }).join('') + `</div></div>`;
-
     const steps = [['reach', 'Охват'], ['actions', 'Целевые действия'], ['registrations', 'Регистрации'], ['forms', 'Анкеты'], ['valid', 'Валидные'], ['sales', 'Продажи']];
     const funnel = steps.map((s, i) => {
       const prev = i ? t[steps[i - 1][0]] : 0, v = t[s[0]];
@@ -293,11 +283,21 @@
     const all = parts.reduce((s, p) => s + p[1], 0);
     let acc = 0;
     const grad = parts.map(p => { const a = acc / all * 360, b = (acc += p[1]) / all * 360; return `${DIR_COLOR[p[0]]} ${a}deg ${Math.max(a, b - 1)}deg, #fff ${Math.max(a, b - 1)}deg ${b}deg`; }).join(', ');
-    h += `<div class="two-col"><div class="panel"><div class="panel-head"><div><h2>Воронка</h2><p>От охвата до продажи. Конверсия больше 100% не показывается: часть анкет приходит не через бота.</p></div></div><div class="funnel">${funnel}</div></div>
-      <div class="panel"><div class="panel-head"><div><h2>${donutBy === 'revenue' ? 'Сумма продаж' : 'Анкеты'} по направлениям</h2><p>Доля каждого направления.</p></div></div>
+    h += `<div class="two-col"><div class="panel"><div class="panel-head"><div><h2>Путь до продажи</h2><p>От охвата до оплаты. Конверсия больше 100% не показывается: часть анкет приходит не через бота.</p></div></div><div class="funnel">${funnel}</div></div>
+      <div class="panel"><div class="panel-head"><div><h2>${donutBy === 'revenue' ? 'Распределение выручки' : 'Распределение анкет'}</h2><p>Доля каждого направления.</p></div></div>
       <div class="attribution"><div class="donut" style="background:${all ? `conic-gradient(${grad})` : '#eef1f5'}"><span>${all ? (donutBy === 'revenue' ? D.fmtShort(all) : M(donutBy, all)) : '—'}</span><small>${donutBy === 'revenue' ? 'сумма продаж' : 'анкеты'}</small></div>
       <div class="legend-list">${parts.map(p => `<div class="legend-row"><i style="background:${DIR_COLOR[p[0]]}"></i><span>${esc(p[0])}</span><b>${M(donutBy, p[1])}</b><em>${D.fmt(p[1] / all, 'pct0')}</em></div>`).join('') || '<span class="muted">Нет данных</span>'}</div></div></div></div>`;
 
+    h += `<div class="panel"><div class="panel-head"><div><h2>Направления</h2><p>Нажмите на карточку, чтобы открыть направление.</p></div></div><div class="direction-grid">` +
+      DIRS.filter(d => !S.dirs || S.dirs.has(d)).map(d => {
+        const x = (dc[d] || {}).total || D.derive(D.zero());
+        return `<button type="button" class="direction-card ${DIR_CLASS[d]}" data-tab="${TAB_OF_DIR[d]}"><header><span>${esc(d)}</span><b>${share(x.forms, t.forms)} анкет</b></header><dl>
+          <dt>Регистрации</dt><dd>${M('registrations', x.registrations)}</dd><dt>Анкеты</dt><dd>${M('forms', x.forms)}</dd>
+          <dt>Валидные</dt><dd>${M('valid', x.valid)}</dd><dt>Продажи</dt><dd>${M('sales', x.sales)}</dd>
+          <dt>Сумма продаж</dt><dd>${M('revenue', x.revenue)}</dd><dt>Затраты</dt><dd>${M('cost', x.cost)}</dd><dt>CPL</dt><dd>${M('cpl', x.cpl)}</dd></dl></button>`;
+      }).join('') + `</div></div>`;
+
+    h += planSummary();
     h += topPanel('summary', unitRows(rows, {unknown: false}), `Топ-${C.TOP_N} публикаций и креативов`, 'Самые результативные за период. Нажмите на название, чтобы открыть карточку.');
     return h;
   }
@@ -346,6 +346,7 @@
       kpi('Сумма продаж', M('revenue', t.revenue), hasCost ? 'затраты ' + M('cost', t.cost) + ' · ROMI ' + M('romi', t.romi) : 'затрат нет', 'strong-card') +
       `</div>`;
 
+    if (dir === 'Органика') h += kanalAlert();
     const chRows = Object.keys(dc.channels).map(c => Object.assign({channel: c, direction: dir}, dc.channels[c]))
       .filter(r => D.BASE.some(k => r[k]));
     const chCols = [{key: 'channel', label: 'Канал', html: r => `<button type="button" class="unit-link" data-chan-only="${esc(dir + '|' + r.channel)}" title="Показать только этот канал">${esc(r.channel)}</button>`},
@@ -363,13 +364,39 @@
       .concat(unitCost ? [metricCol('cost'), metricCol('cpl', {label: 'CPL'})] : []);
     const st = S.ui['t:u-' + t0.id];
     const shown = st && st.q ? units.filter(r => unitSearch(r).toLowerCase().indexOf(st.q.toLowerCase()) >= 0).length : units.length;
-    h += `<div class="panel"><div class="panel-head"><div><h2>Публикации и результаты</h2><p>Каждая строка: публикация (или своя ссылка) и что она принесла за период. Нажмите на название, чтобы открыть карточку со сценарием и статистикой Instagram.</p></div>
+    h += `<div class="panel"><div class="panel-head"><div><h2>Результат каждого материала</h2><p>Каждая строка: публикация (или своя ссылка) и что она принесла за период. Сверху самые денежные, сортировка меняется кликом по заголовку. Нажмите на название, чтобы открыть карточку со сценарием и статистикой Instagram.</p></div>
       <div class="panel-tools">${tableTools('u-' + t0.id, {search: 'Название, код или кодовое слово'})}</div></div>
       <div class="result-strip"><span>Строк: ${shown}</span><span>Опубликовано за период: ${M('publications', t.publications)}</span><span>С анкетами: ${units.filter(u => u.forms > 0).length}</span><span>С продажами: ${units.filter(u => u.sales > 0).length}</span></div>
-      ${table('u-' + t0.id, cols, units, {sort: 'pubDate', search: unitSearch, csvName: 'publikacii_' + t0.id})}</div>`;
+      ${table('u-' + t0.id, cols, units, {sort: 'revenue', tie: ['sales', 'forms', 'valid', 'registrations', 'reach', 'pubDate'], search: unitSearch, csvName: 'materialy_' + t0.id})}</div>`;
 
-    if (dir === 'Органика') h += igPanel();
+    if (dir === 'Органика') h += formatPanel(units) + igPanel();
     return h;
+  }
+
+  // Публикации периода на кодовое слово «Канал»: оно ведёт в бота воркшопа, который к таблице не подключён.
+  function kanalPubs() {
+    return Object.keys(S.db.units).map(k => Object.assign({key: k}, S.db.units[k]))
+      .filter(u => u.direction === 'Органика' && u.date >= S.from && u.date <= S.to && /^канал$/i.test(String(u.keyword || '').trim()));
+  }
+  function kanalAlert() {
+    const n = kanalPubs().length;
+    return n ? `<div class="alert info"><strong>${n} ${plural(n, 'публикация', 'публикации', 'публикаций')} на слово «Канал»</strong>
+      <span>Оно ведёт в бота воркшопа @Yeswebbot, который пока не подключён к таблице. Поэтому регистрации и анкеты с этих публикаций к ним не привязываются: охват виден, результат нет.</span><button type="button" data-tab="quality">Подробнее</button></div>` : '';
+  }
+
+  // Какой формат (из колонки «Формат» рабочей таблицы) приносит больше.
+  function formatPanel(units) {
+    const m = {};
+    units.filter(u => !u.isUnknown && u.code).forEach(u => {
+      const f = u.format || 'Не указан', x = m[f] || (m[f] = Object.assign({format: f, views: 0}, D.zero()));
+      D.add(x, u); x.views += igViews(u) || 0;
+    });
+    const rows = Object.values(m).map(D.derive);
+    if (rows.length < 2 && rows[0] && rows[0].format === 'Не указан') return '';
+    const cols = [{key: 'format', label: 'Формат'}, metricCol('publications'), {key: 'views', label: 'Просмотры', num: true, fmt: 'int', sum: true},
+      metricCol('reach'), metricCol('registrations'), metricCol('forms'), metricCol('valid'), metricCol('sales'), metricCol('revenue')];
+    return `<div class="panel"><div class="panel-head"><div><h2>Форматы</h2><p>Что лучше работает: личное, польза, продающий и т. д. Формат берётся из колонки «Формат» рабочей таблицы; где не заполнен, строка «Не указан».</p></div>
+      <div class="panel-tools">${tableTools('fmt')}</div></div>${table('fmt', cols, rows, {sort: 'forms', tie: ['revenue', 'reach'], short: true, csvName: 'formaty'})}</div>`;
   }
 
   function igPanel() {
@@ -390,7 +417,7 @@
     const usd = ads.reduce((s, a) => s + (a.spendUsd || 0), 0);
     const lastAds = db.ads.length ? db.ads[db.ads.length - 1].date : '';
     const ctr = t.reach ? t.actions / t.reach : null;
-    let h = pageTitle('Направление', 'Платный трафик', `${esc(D.rangeLabel(S.from, S.to))}. Расход, показы, клики и входы из таблицы таргетолога; анкеты и продажи по меткам в amoCRM.`);
+    let h = pageTitle('Платный трафик · ' + D.rangeLabel(S.from, S.to), 'Таргет: расходы, анкеты и продажи', `Расход, показы, клики и входы из таблицы таргетолога; анкеты и продажи по меткам в amoCRM.`);
     h += `<div class="kpi-grid">` +
       kpi('Расход', M('cost', t.cost), usd ? D.fmt(usd, 'usd') + ' по курсу месяца' : 'нет расхода за период', 'strong-card') +
       kpi('Показы', M('reach', t.reach), 'CTR ' + (ctr === null ? '—' : D.fmt(ctr, 'pct'))) +
@@ -404,8 +431,8 @@
     if (lastAds && D.daysBetween(lastAds, db.maxDate) > 2) h += `<div class="alert"><strong>Реклама в таблице таргетолога по ${D.dFull(lastAds)}</strong><span>Дни после этой даты без расхода, показов и кликов, пока таргетолог их не внесёт.</span></div>`;
 
     const creatives = unitRows(rows).filter(u => !u.isAds);
-    h += `<div class="two-col">${topPanel('paid', creatives.filter(u => !u.isUnknown), `Креативы: топ-${C.TOP_N}`, 'По меткам в amoCRM: какой креатив привёл анкету и продажу.', 'forms')}
-      <div class="panel"><div class="panel-head"><div><h2>Как считается</h2></div></div><ul class="check-list">
+    h += `<div class="two-col">${topPanel('paid', creatives.filter(u => !u.isUnknown), `Креативы по результату: топ-${C.TOP_N}`, 'По меткам в amoCRM: какой креатив привёл анкету и продажу.', 'forms')}
+      <div class="panel"><div class="panel-head"><div><h2>Ограничение детализации</h2><p>Что видно по рекламе, а чего нет.</p></div></div><ul class="check-list">
       <li>Расход, показы, клики и входы в бота берутся из таблицы таргетолога по дням. Разбивки по креативам там нет, поэтому расход стоит одной строкой «Таргет».</li>
       <li>Анкеты и продажи привязаны к креативу по метке трафика в amoCRM («кампания | группа | объявление»).</li>
       <li>Расход в долларах переводится в тенге по среднему курсу месяца (лист «Курс»).</li>
@@ -414,9 +441,9 @@
     const crCols = [{key: 'title', label: 'Креатив', cls: 'title-cell', html: titleCell, csv: r => r.title}, metricCol('forms'), metricCol('valid'),
       {key: 'validShare', label: '% валидных', num: true, fmt: 'pct', noTotal: true, get: r => r.forms ? r.valid / r.forms : null},
       metricCol('sales'), metricCol('revenue'), metricCol('formToSale', {label: 'Анкета → продажа'})];
-    h += `<div class="panel"><div class="panel-head"><div><h2>Креативы</h2><p>Анкеты и продажи по креативам за период. «Источник не определён»: платная сделка без метки креатива.</p></div>
+    h += `<div class="panel"><div class="panel-head"><div><h2>Результат каждого креатива</h2><p>Анкеты и продажи по креативам за период. «Креатив не указан в метке»: в метке amo есть только группа объявлений. «Источник не определён»: платная сделка без метки.</p></div>
       <div class="panel-tools">${tableTools('cr', {search: 'Креатив или группа'})}</div></div>
-      ${table('cr', crCols, creatives, {sort: 'forms', search: r => r.title, csvName: 'kreativy'})}</div>`;
+      ${table('cr', crCols, creatives, {sort: 'forms', tie: ['revenue', 'valid'], search: r => r.title, csvName: 'kreativy'})}</div>`;
 
     // по дням: показатели «Платного» + доллары из таблицы таргетолога
     const days = D.byPeriod(rows, S.from, S.to, 'day');
@@ -428,7 +455,7 @@
       {key: 'ctr', label: 'CTR', num: true, fmt: 'pct', noTotal: true, get: r => r.reach ? r.actions / r.reach : null},
       metricCol('registrations', {label: 'Входы в бота'}), metricCol('forms'), metricCol('valid'), metricCol('cpl', {label: 'CPL'}),
       metricCol('sales'), metricCol('revenue')];
-    h += `<div class="panel"><div class="panel-head"><div><h2>Реклама по дням</h2><p>Дни, где был расход или результат.</p></div><div class="panel-tools">${tableTools('ads')}</div></div>
+    h += `<div class="panel"><div class="panel-head"><div><h2>Данные рекламы по дням</h2><p>Дни, где был расход или результат. Пустой расход в день с анкетами: таргетолог ещё не внёс этот день.</p></div><div class="panel-tools">${tableTools('ads')}</div></div>
       ${table('ads', dCols, dayRows, {sort: 'date', csvName: 'reklama_po_dnyam'})}</div>`;
     return h;
   }
@@ -449,7 +476,11 @@
     const step = Math.ceil(buckets.length / 16);
     const open = ui('dyn:open', '');
 
-    let h = pageTitle('Динамика', 'По дням, неделям и месяцам', `${esc(D.rangeLabel(S.from, S.to))}. Нажмите на столбик или строку, чтобы увидеть публикации и результаты этого периода.`);
+    let h = pageTitle('Динамика', 'Что происходило · ' + D.rangeLabel(S.from, S.to), `${esc(filterHeading())}. Нажмите на столбик или строку, чтобы увидеть публикации и результаты этого периода.`);
+    const pubsOf = {};
+    rows.forEach(r => { if (!r.publications || !r.unit) return; const b = D.bucketOf(r.date, grain); (pubsOf[b] = pubsOf[b] || {})[r.unit] = r.channel; });
+    const pubTitle = k => (db.units[k] && db.units[k].title) || D.unitTitle(k);
+    buckets.forEach(b => { b.pubs = Object.keys(pubsOf[b.start] || {}).map(k => ({key: k, channel: pubsOf[b.start][k], title: pubTitle(k)})); });
     h += `<div class="panel"><div class="panel-head"><div class="chart-summary">
         <div><span>${esc(D.METRIC[metric].label)} за период</span><strong>${M(metric, tot[metric])}</strong></div>
         ${D.METRIC[metric].fmt === 'int' || D.METRIC[metric].fmt === 'money' ? `<div><span>В среднем за ${unitName}</span><strong>${M(metric, buckets.length ? tot[metric] / buckets.length : 0)}</strong></div>` : ''}
@@ -463,7 +494,14 @@
       }).join('')}</div>
       <div class="bar-axis">${buckets.map((b, i) => `<span>${i % step === 0 ? esc(grain === 'month' ? D.monthLabel(b.start).split(' ')[0].slice(0, 3) : D.dShort(b.from)) : ''}</span>`).join('')}</div></div>`;
 
+    const pubCell = r => {
+      if (!r.pubs.length) return '<span class="muted">—</span>';
+      if (grain !== 'day') { const by = {}; r.pubs.forEach(p => { by[p.channel] = (by[p.channel] || 0) + 1; }); return esc(Object.keys(by).map(c => c + ' ' + by[c]).join(' · ')); }
+      return r.pubs.slice(0, 3).map(p => `<div class="pub-line"><span class="pill gray">${esc(p.channel)}</span> <button type="button" class="unit-link" data-unit="${esc(p.key)}" title="${esc(p.title)}">${esc(p.title)}</button></div>`).join('') +
+        (r.pubs.length > 3 ? `<span class="muted small">и ещё ${r.pubs.length - 3}</span>` : '');
+    };
     const cols = [{key: 'date', label: grain === 'day' ? 'День' : grain === 'week' ? 'Неделя' : 'Месяц', html: r => `<b>${esc(D.periodLabel(r, grain))}</b> <span class="muted small">${r.start === open ? '▲' : '▼'}</span>`},
+      {key: 'pubList', label: 'Что вышло', cls: 'pub-cell', get: r => r.pubs.map(p => p.channel + ': ' + p.title).join('; ')  || null, html: pubCell},
       metricCol('publications'), metricCol('reach'), metricCol('actions', {label: 'Действия'}), metricCol('registrations'), metricCol('forms'), metricCol('valid'),
       metricCol('sales'), metricCol('revenue'), metricCol('cost'), metricCol('cpl', {label: 'CPL'})]
       .concat(grain === 'day' ? [{key: 'accountReach', label: 'Охват аккаунта IG', num: true, fmt: 'int', noTotal: true, tip: 'Охват всего аккаунта Instagram за сутки (время Meta)'}, {key: 'followers', label: 'Подписчики', num: true, fmt: 'int', noTotal: true}] : []);
@@ -552,6 +590,9 @@
     h += unk.forms ? issue(unk.forms / (t.forms || 1) > 0.2 ? 'critical' : 'warning', 'АНКЕТЫ', `${M('forms', unk.forms)} ${plural(unk.forms, 'анкета', 'анкеты', 'анкет')} без источника (${share(unk.forms, t.forms)})`,
       'У сделки в amoCRM нет метки трафика и кода. Они входят в общий итог, но не попадают ни в одно направление.')
       : issue('ok', 'АНКЕТЫ', 'У всех анкет есть источник', 'За период нет анкет с неопределённым направлением.');
+    const kp = kanalPubs();
+    h += kp.length ? issue('warning', 'КОДОВОЕ СЛОВО «КАНАЛ»', `${kp.length} ${plural(kp.length, 'публикация', 'публикации', 'публикаций')} на «Канал» без результата`,
+      'Слово «Канал» ведёт в бота воркшопа @Yeswebbot, а таблица подключена к основному боту @YesDekhnichBot. Пока бот воркшопа не подключат, входы, анкеты и продажи с этих публикаций не привязываются к ним.', `<ul>${names(kp)}</ul>`) : '';
     h += costsEmpty ? issue('warning', 'ЗАТРАТЫ', 'Затраты команды не внесены', 'ROMI и окупаемость считаются только по рекламе. Зарплаты и подрядчиков вносят в лист «Затраты» по месяцам.')
       : issue('ok', 'ЗАТРАТЫ', 'Затраты внесены', esc(statusOf('Затраты')));
     h += adsLag !== null && adsLag > 1 ? issue('warning', 'РЕКЛАМА', `Таблица таргетолога по ${D.dFull(lastAds)}`, `Нет данных о расходе за ${adsLag} ${plural(adsLag, 'день', 'дня', 'дней')}: расход, показы и клики за эти дни пустые.`)
