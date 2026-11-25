@@ -1,0 +1,304 @@
+/* Внешний вид дашборда. Цвета и размеры меняются в :root, остальное по разделам ниже. */
+:root {
+  --bg: #f3f5f7; --paper: #fff; --ink: #15181c; --muted: #6b7280; --line: #dfe3e8;
+  --blue: #2559d6; --blue-soft: #edf3ff;
+  --green: #14794f; --green-soft: #e8f6ef;      /* Органика */
+  --orange: #a65b00; --orange-soft: #fff4e4;    /* Платный */
+  --purple: #6d48c5; --purple-soft: #f1edff;    /* Работа с базой */
+  --red: #b42318; --red-soft: #fff0ee;          /* Не определено */
+  --gray: #8a919b;
+  --dark: #14171a;
+  --page: 1480px;
+}
+
+* { box-sizing: border-box }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif }
+a { color: var(--blue) }
+button { font: inherit }
+.muted { color: var(--muted) }
+.small { font-size: 11px }
+.nowrap { white-space: nowrap }
+
+/* ---------- Шапка и вкладки ---------- */
+.topbar { min-height: 64px; background: var(--dark); color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 max(24px, calc((100vw - var(--page)) / 2)) }
+.brand, .head-meta { display: flex; align-items: center; gap: 12px }
+.brand { font-size: 16px; font-weight: 750 }
+.logo { width: 33px; height: 33px; border-radius: 8px; background: #fff; color: #111; display: grid; place-items: center; font-weight: 850 }
+.live-badge { font-size: 10px; letter-spacing: .08em; background: #183c2c; color: #84e2b4; padding: 4px 7px; border-radius: 4px }
+.live-badge.stale { background: #4a3413; color: #ffd9a0 }
+.head-meta { font-size: 12px; color: #c6cbd1 }
+.head-meta i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #42cf84; margin-right: 5px }
+.head-meta i.warn { background: #f0a93b }
+.head-meta a { color: #fff; text-decoration: none; border-left: 1px solid #444a51; padding-left: 12px }
+.head-btn { border: 1px solid #444a51; background: none; color: #fff; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px }
+.head-btn:hover { border-color: #8a919b }
+.head-btn[disabled] { opacity: .5; cursor: wait }
+
+.nav { height: 52px; background: #fff; border-bottom: 1px solid var(--line); display: flex; gap: 28px; padding: 0 max(24px, calc((100vw - var(--page)) / 2)); position: sticky; top: 0; z-index: 20; overflow-x: auto }
+.nav-btn { border: 0; background: none; color: var(--muted); font-weight: 650; position: relative; cursor: pointer; white-space: nowrap; padding: 0 }
+.nav-btn:hover { color: var(--ink) }
+.nav-btn.active { color: var(--ink) }
+.nav-btn.active:after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--blue) }
+
+main { max-width: var(--page); margin: auto; padding: 22px 24px 60px }
+
+/* ---------- Фильтры ---------- */
+.filters { display: grid; grid-template-columns: 1fr; gap: 12px; background: #fff; border: 1px solid var(--line); border-radius: 11px; padding: 14px 16px; margin-bottom: 24px }
+.filter-intro { display: flex; align-items: center; gap: 8px }
+.filter-intro span { color: var(--blue); font-size: 10px; font-weight: 800; letter-spacing: .08em }
+.filter-intro strong { font-size: 12px }
+.filter-intro button { margin-left: auto; border: 0; background: none; color: var(--blue); cursor: pointer }
+.date-filter > span, .direction-filter > span, .channel-filter > span { display: block; text-transform: uppercase; font-size: 10px; color: var(--muted); letter-spacing: .05em; margin-bottom: 4px }
+.date-filter { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 6px 12px }
+.date-filter > span { width: 100% }
+.date-inputs { display: grid; grid-template-columns: 150px 150px; gap: 6px }
+.date-inputs label { position: relative }
+.date-inputs em { position: absolute; left: 8px; top: 11px; font-style: normal; font-size: 10px; color: var(--muted); z-index: 1 }
+.filters input, select { height: 37px; width: 100%; border: 1px solid var(--line); border-radius: 7px; background: #fff; padding: 0 9px; color: var(--ink); font: inherit }
+.date-inputs input { padding-left: 25px }
+.date-presets { display: flex; gap: 4px; flex-wrap: wrap }
+.date-presets button { border: 1px solid var(--line); background: #fff; color: var(--muted); border-radius: 6px; padding: 6px 9px; font: 600 11px/1.2 inherit; cursor: pointer }
+.date-presets button:hover { color: var(--ink) }
+.date-presets button.active { border-color: #9db4ef; background: var(--blue-soft); color: var(--blue) }
+.direction-switch, .channel-switch { display: flex; gap: 6px; flex-wrap: wrap }
+.direction-switch button, .channel-switch button { position: relative; border: 1px solid var(--line); border-radius: 7px; background: #fff; padding: 8px 12px; font: 650 12px/1.2 inherit; cursor: pointer; color: #4d5560 }
+.direction-switch button:before, .channel-switch button:before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #99a0a9; margin-right: 7px }
+.organic:before { background: var(--green) !important }
+.paid:before { background: var(--orange) !important }
+.base:before { background: var(--purple) !important }
+.unknown:before { background: var(--red) !important }
+.direction-switch button.active, .channel-switch button.active { border-color: #7f9be1; background: var(--blue-soft); color: #183f9e; box-shadow: inset 0 0 0 1px #7f9be1 }
+.channel-switch button em { font-style: normal; color: var(--muted); font-weight: 500; margin-left: 4px }
+.filters[hidden], .direction-filter[hidden], .channel-filter[hidden] { display: none }
+
+/* ---------- Заголовок страницы ---------- */
+.page-title { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 18px }
+.eyebrow { font-size: 10px; font-weight: 800; color: var(--blue); letter-spacing: .1em; text-transform: uppercase }
+.page-title h1 { font-size: 30px; line-height: 1.15; letter-spacing: -.025em; margin: 4px 0 6px }
+.page-title p { margin: 0; color: var(--muted) }
+.source-status { text-align: right; font-size: 12px }
+.source-status b, .source-status span { display: block }
+.source-status b { color: var(--green) }
+.source-status span { font-size: 11px; color: var(--muted) }
+
+/* ---------- Карточки KPI ---------- */
+.kpi-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 9px; margin-bottom: 14px }
+.kpi-grid.cols-6 { grid-template-columns: repeat(6, 1fr) }
+.kpi-grid article { background: #fff; border: 1px solid var(--line); border-radius: 9px; padding: 13px; min-height: 108px }
+.kpi-grid article > span { display: block; color: #626a75; font-size: 12px; min-height: 34px }
+.kpi-grid strong { display: block; font-size: 24px; letter-spacing: -.025em; margin: 6px 0 4px; font-variant-numeric: tabular-nums }
+.kpi-grid small { display: block; color: var(--muted); font-size: 10px }
+.kpi-grid .strong-card { border-top: 3px solid var(--blue); padding-top: 11px }
+.kpi-grid .profit-card { background: #17392b; color: #fff; border-color: #17392b }
+.kpi-grid .profit-card span, .kpi-grid .profit-card small { color: #b6d7c7 }
+.kpi-grid .loss-card { background: #3d1714; color: #fff; border-color: #3d1714 }
+.kpi-grid .loss-card span, .kpi-grid .loss-card small { color: #f1c2bd }
+
+/* ---------- Предупреждения и панели ---------- */
+.alert { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #e4c7a0; background: #fff8ec; border-radius: 9px; margin-bottom: 14px }
+.alert strong { white-space: nowrap }
+.alert span { color: #6e5a3e }
+.alert button, .alert a { margin-left: auto; border: 0; background: none; color: #89500c; font-weight: 650; cursor: pointer; white-space: nowrap; text-decoration: none }
+.alert.info { border-color: #c9d6f5; background: #f5f8ff }
+.alert.info span { color: #3c4a6b }
+.panel { background: #fff; border: 1px solid var(--line); border-radius: 11px; padding: 18px; margin-bottom: 14px }
+.panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 15px; flex-wrap: wrap }
+.panel-head h2 { font-size: 18px; margin: 0 0 3px }
+.panel-head p { margin: 0; color: var(--muted) }
+.panel-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
+.panel-tools label { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px }
+.panel-tools select { width: auto; min-width: 150px }
+.panel-tools input[type=search] { width: 240px; height: 37px; border: 1px solid var(--line); border-radius: 7px; padding: 0 10px; font: inherit }
+.btn { height: 37px; border: 1px solid var(--line); border-radius: 7px; background: #fff; padding: 0 12px; font-weight: 650; cursor: pointer; color: var(--ink); white-space: nowrap }
+.btn:hover { border-color: #9db4ef }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden }
+.seg button { border: 0; background: #fff; padding: 8px 12px; cursor: pointer; color: var(--muted); font-weight: 650; font-size: 12px }
+.seg button + button { border-left: 1px solid var(--line) }
+.seg button.active { background: var(--blue-soft); color: var(--blue) }
+.two-col { display: grid; grid-template-columns: 1.25fr .75fr; gap: 14px }
+.half { display: grid; grid-template-columns: 1fr 1fr; gap: 14px }
+.note { color: #555d68; font-size: 12px; margin: 10px 0 0 }
+
+/* ---------- Воронка, кольцо, направления ---------- */
+.funnel { display: grid; grid-template-columns: repeat(6, 1fr); gap: 22px; overflow: auto }
+.funnel-step { position: relative; min-width: 100px }
+.funnel-step:not(:last-child):after { content: "→"; position: absolute; right: -17px; top: 26px; color: #a6abb3 }
+.funnel-step div { border: 1px solid var(--line); background: #fafbfc; border-radius: 8px; padding: 10px }
+.funnel-step span, .funnel-step strong, .funnel-step small { display: block }
+.funnel-step span { font-size: 10px; color: var(--muted) }
+.funnel-step strong { font-size: 21px; margin: 4px 0; font-variant-numeric: tabular-nums }
+.funnel-step small { font-size: 10px; color: #3057b8 }
+.attribution { display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap }
+.donut { width: 142px; height: 142px; border-radius: 50%; display: grid; place-items: center; align-content: center; position: relative }
+.donut:after { content: ""; position: absolute; inset: 19px; background: #fff; border-radius: 50% }
+.donut span, .donut small { position: relative; z-index: 1 }
+.donut span { font-size: 20px; font-weight: 800 }
+.donut small { font-size: 10px; color: var(--muted) }
+.legend-list { min-width: 190px }
+.legend-row { display: grid; grid-template-columns: 9px 1fr auto auto; gap: 7px; align-items: center; margin: 9px 0 }
+.legend-row i { width: 9px; height: 9px; border-radius: 2px }
+.legend-row span { color: var(--muted); font-size: 11px }
+.legend-row b { font-size: 12px; text-align: right }
+.legend-row em { font-style: normal; font-size: 11px; color: var(--muted); min-width: 34px; text-align: right }
+.direction-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px }
+.direction-card { border: 1px solid var(--line); border-radius: 9px; padding: 13px; cursor: pointer; background: #fff; text-align: left; color: var(--ink) }
+.direction-card:hover { border-color: #90a9e8 }
+.direction-card header { display: flex; align-items: center; justify-content: space-between; gap: 8px }
+.direction-card header span { font-weight: 750 }
+.direction-card header b { font-size: 11px; padding: 3px 6px; border-radius: 4px; white-space: nowrap }
+.direction-card dl { display: grid; grid-template-columns: 1fr auto; gap: 6px; margin: 13px 0 0 }
+.direction-card dt { color: var(--muted); font-size: 11px }
+.direction-card dd { margin: 0; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums }
+.direction-card.organic header b { background: var(--green-soft); color: var(--green) }
+.direction-card.paid header b { background: var(--orange-soft); color: var(--orange) }
+.direction-card.base header b { background: var(--purple-soft); color: var(--purple) }
+.direction-card.unknown header b { background: var(--red-soft); color: var(--red) }
+
+/* ---------- Таблицы ---------- */
+.table-wrap { overflow: auto; max-height: 680px; border: 1px solid var(--line); border-radius: 9px }
+.table-wrap.short { max-height: none }
+table { width: 100%; border-collapse: collapse }
+th, td { border-bottom: 1px solid var(--line); padding: 9px 9px; text-align: left; vertical-align: middle }
+th { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: #707783; background: #fafbfc; white-space: nowrap; position: sticky; top: 0; z-index: 2 }
+th[data-sort] { cursor: pointer; user-select: none }
+th[data-sort]:hover { color: var(--ink) }
+th.sorted { color: var(--blue) }
+th.sorted:after { content: " ↓" }
+th.sorted.asc:after { content: " ↑" }
+td { font-size: 12px }
+tbody tr:hover td { background: #fafcff }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap }
+tfoot td { background: #f1f4f8; font-weight: 750; border-top: 2px solid #ccd3de; position: sticky; bottom: 0; z-index: 1 }
+td.title-cell { min-width: 240px; max-width: 420px }
+.unit-link { border: 0; background: none; padding: 0; color: var(--ink); font-weight: 650; text-align: left; cursor: pointer; font-size: 12px }
+.unit-link:hover { color: var(--blue); text-decoration: underline }
+.ext { margin-left: 6px; text-decoration: none; font-size: 12px }
+.code { font: 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); display: block; margin-top: 2px }
+.pill { display: inline-block; font-size: 10px; font-weight: 750; padding: 3px 6px; border-radius: 5px; white-space: nowrap }
+.pill.organic { background: var(--green-soft); color: var(--green) }
+.pill.paid { background: var(--orange-soft); color: var(--orange) }
+.pill.base { background: var(--purple-soft); color: var(--purple) }
+.pill.unknown { background: var(--red-soft); color: var(--red) }
+.pill.gray { background: #eef0f3; color: #59616d }
+.result-strip { display: flex; gap: 7px; margin-bottom: 9px; flex-wrap: wrap }
+.result-strip span { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font-size: 11px; color: #5f6670 }
+.empty { padding: 50px 20px; text-align: center; color: var(--muted) }
+tr.clickable { cursor: pointer }
+tr.open td { background: var(--blue-soft) }
+tr.details td { background: #fbfcfe; padding: 12px 16px }
+.day-list { display: grid; gap: 6px }
+.day-list div { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap }
+
+/* ---------- Топ ---------- */
+.top-list { display: grid; gap: 0 }
+.top-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) 110px 120px; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); padding: 8px 0 }
+.top-row:last-child { border: 0 }
+.top-row > span:first-child { color: #9aa0a9; font-variant-numeric: tabular-nums }
+.top-row .bar { height: 6px; background: #eef1f5; border-radius: 3px; overflow: hidden }
+.top-row .bar i { display: block; height: 100%; background: var(--blue); border-radius: 3px }
+.top-row b { text-align: right; font-variant-numeric: tabular-nums }
+.top-row .t { min-width: 0 }
+.top-row .t .unit-link { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100% }
+.top-row .t small { color: var(--muted); font-size: 10px }
+
+/* ---------- Столбики (Динамика) ---------- */
+.chart-summary { display: flex; gap: 34px; margin-bottom: 18px; flex-wrap: wrap }
+.chart-summary span, .chart-summary strong { display: block }
+.chart-summary span { font-size: 11px; color: var(--muted) }
+.chart-summary strong { font-size: 22px; font-variant-numeric: tabular-nums }
+.bars { height: 260px; display: flex; align-items: flex-end; gap: 4px; padding-top: 24px; border-bottom: 1px solid var(--line); overflow-x: auto }
+.bar-item { flex: 1; min-width: 18px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: relative; cursor: pointer }
+.bar-rect { width: 70%; max-width: 46px; min-height: 2px; border-radius: 4px 4px 0 0; background: var(--blue) }
+.bar-item:hover .bar-rect { background: #163c9e }
+.bar-item.zero .bar-rect { background: #d5dae1 }
+.bar-value { position: absolute; font-size: 9px; color: #59616d; white-space: nowrap }
+.bar-axis { display: flex; gap: 4px; overflow: hidden }
+.bar-axis span { flex: 1; min-width: 18px; font-size: 9px; color: var(--muted); text-align: center; white-space: nowrap; overflow: hidden; margin-top: 5px }
+.tooltip { position: fixed; z-index: 100; pointer-events: none; background: #14171a; color: #fff; border-radius: 6px; padding: 7px 9px; font-size: 12px; max-width: 260px; box-shadow: 0 4px 16px rgba(0, 0, 0, .18) }
+.tooltip b { display: block; font-size: 14px }
+.tooltip span { color: #c6cbd1; font-size: 11px }
+
+/* ---------- План-факт ---------- */
+.plan-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px }
+.plan-card { border: 1px solid var(--line); border-radius: 9px; padding: 13px; background: #fff }
+.plan-card > span { display: block; color: #626a75; font-size: 12px }
+.plan-card strong { display: block; font-size: 22px; margin: 6px 0 2px; font-variant-numeric: tabular-nums }
+.plan-card strong em { font-style: normal; font-size: 13px; color: var(--muted); font-weight: 600 }
+.progress { height: 8px; background: #eef1f5; border-radius: 4px; overflow: hidden; margin: 8px 0 6px; position: relative }
+.progress i { display: block; height: 100%; background: var(--blue); border-radius: 4px }
+.progress i.done { background: var(--green) }
+.progress i.behind { background: #d27a16 }
+.progress u { position: absolute; top: -2px; bottom: -2px; width: 2px; background: #14171a; opacity: .45 }
+.plan-card small { display: block; color: var(--muted); font-size: 11px }
+.plan-cell { min-width: 150px }
+.plan-cell .progress { margin: 4px 0 3px; height: 6px }
+.plan-cell b { font-variant-numeric: tabular-nums }
+.plan-cell small { color: var(--muted); font-size: 10px; display: block }
+tr.dir-row td { font-weight: 700; background: #fafbfc }
+tr.chan-row td:first-child { padding-left: 26px }
+
+/* ---------- Качество данных ---------- */
+.quality-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px }
+.issue { background: #fff; border: 1px solid var(--line); border-radius: 9px; padding: 16px; border-top: 3px solid #aeb4bd }
+.issue > span { font-size: 9px; font-weight: 850; letter-spacing: .08em }
+.issue h2 { font-size: 16px; margin: 7px 0 5px }
+.issue p { margin: 0; color: var(--muted) }
+.issue ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px }
+.issue.critical { border-top-color: var(--red) }
+.issue.critical > span { color: var(--red) }
+.issue.warning { border-top-color: #d27a16 }
+.issue.warning > span { color: var(--orange) }
+.issue.ok { border-top-color: var(--green) }
+.issue.ok > span { color: var(--green) }
+.issue.info > span { color: #667080 }
+.check-list { margin: 0; padding-left: 22px; display: grid; gap: 8px }
+.check-list li::marker { color: var(--green) }
+
+/* ---------- Карточка публикации (справа) ---------- */
+.drawer { position: fixed; inset: 0; z-index: 50; background: rgba(20, 23, 26, .35); display: flex; justify-content: flex-end }
+.drawer[hidden] { display: none }
+.drawer-box { width: min(560px, 100%); height: 100%; overflow: auto; background: #fff; padding: 22px 24px 40px; position: relative; box-shadow: -8px 0 30px rgba(0, 0, 0, .15) }
+.drawer-close { position: absolute; right: 14px; top: 12px; border: 0; background: none; font-size: 26px; line-height: 1; cursor: pointer; color: var(--muted) }
+.drawer h2 { font-size: 20px; margin: 8px 30px 6px 0; line-height: 1.25 }
+.drawer h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 22px 0 8px }
+.drawer dl { display: grid; grid-template-columns: 170px 1fr; gap: 7px 12px; margin: 0 }
+.drawer dt { color: var(--muted); font-size: 12px }
+.drawer dd { margin: 0; font-size: 13px; font-variant-numeric: tabular-nums }
+.drawer .open-btn { display: inline-block; margin-top: 10px; background: var(--blue); color: #fff; text-decoration: none; border-radius: 7px; padding: 9px 14px; font-weight: 650 }
+.drawer .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px }
+.drawer .stat-grid div { border: 1px solid var(--line); border-radius: 7px; padding: 9px }
+.drawer .stat-grid span { display: block; font-size: 10px; color: var(--muted) }
+.drawer .stat-grid b { display: block; font-size: 16px; margin-top: 3px; font-variant-numeric: tabular-nums }
+.drawer .text-block { white-space: pre-wrap; background: #fafbfc; border: 1px solid var(--line); border-radius: 7px; padding: 10px; font-size: 13px }
+
+/* ---------- Загрузка и ошибки ---------- */
+.loading { padding: 80px 20px; text-align: center; color: var(--muted) }
+.error-box { background: var(--red-soft); border: 1px solid #f0c4bf; color: #7a1d14; border-radius: 9px; padding: 16px }
+#view.busy { opacity: .55; transition: opacity .2s }
+
+/* ---------- Узкие экраны ---------- */
+@media (max-width: 1200px) {
+  .kpi-grid, .kpi-grid.cols-6 { grid-template-columns: repeat(4, 1fr) }
+  .direction-grid, .plan-grid { grid-template-columns: repeat(2, 1fr) }
+  .quality-grid { grid-template-columns: 1fr 1fr }
+}
+@media (max-width: 760px) {
+  .topbar { padding: 10px 14px; flex-wrap: wrap }
+  .head-meta span { display: none }
+  .head-meta a { border: 0 }
+  .nav { padding: 0 14px; gap: 20px }
+  main { padding: 16px 12px 40px }
+  .page-title { display: block }
+  .page-title h1 { font-size: 24px }
+  .source-status { text-align: left; margin-top: 10px }
+  .kpi-grid, .kpi-grid.cols-6 { grid-template-columns: repeat(2, 1fr) }
+  .two-col, .half, .direction-grid, .plan-grid, .quality-grid { grid-template-columns: 1fr }
+  .alert { display: block }
+  .alert button, .alert a { margin: 6px 0 0; display: inline-block }
+  .live-badge { display: none }
+  .date-inputs { grid-template-columns: 1fr 1fr; width: 100% }
+  .panel-tools input[type=search] { width: 100% }
+  .top-row { grid-template-columns: 22px minmax(0, 1fr) 90px }
+  .top-row .bar { display: none }
+  .drawer dl { grid-template-columns: 130px 1fr }
+}

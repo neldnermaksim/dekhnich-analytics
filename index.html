@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Маркетинговая аналитика</title>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo" id="logo">D+</span><span id="appTitle">Маркетинговая аналитика</span><span class="live-badge">ЖИВЫЕ ДАННЫЕ</span></div>
+  <div class="head-meta">
+    <span id="updatedLabel"><i></i> Загружаю данные…</span>
+    <button type="button" id="reloadBtn" class="head-btn" title="Загрузить данные заново">Обновить</button>
+    <a id="sheetLink" href="#" target="_blank" rel="noreferrer">Открыть таблицу ↗</a>
+  </div>
+</header>
+
+<nav class="nav" id="nav"></nav>
+
+<main>
+  <section class="filters" id="filters">
+    <div class="filter-intro"><span>ФИЛЬТРЫ</span><strong id="filterHeading">—</strong><button type="button" id="resetBtn">Сбросить</button></div>
+    <div class="date-filter">
+      <span>Период</span>
+      <div class="date-inputs">
+        <label><em>с</em><input id="dateFrom" type="date"></label>
+        <label><em>по</em><input id="dateTo" type="date"></label>
+      </div>
+      <div class="date-presets" id="presets">
+        <button type="button" data-preset="today">Сегодня</button>
+        <button type="button" data-preset="yesterday">Вчера</button>
+        <button type="button" data-preset="7">7 дней</button>
+        <button type="button" data-preset="30">30 дней</button>
+        <button type="button" data-preset="month">Этот месяц</button>
+        <button type="button" data-preset="prevmonth">Прошлый месяц</button>
+        <button type="button" data-preset="all">Всё время</button>
+      </div>
+    </div>
+    <div class="direction-filter" id="dirFilter"><span>Направление · можно выбрать несколько</span><div class="direction-switch" id="dirChips"></div></div>
+    <div class="channel-filter" id="chanFilter"><span>Каналы · можно выбрать несколько</span><div class="channel-switch" id="chanChips"></div></div>
+  </section>
+
+  <div id="view"><div class="loading">Загружаю данные из таблицы…</div></div>
+</main>
+
+<aside class="drawer" id="drawer" hidden>
+  <div class="drawer-box"><button type="button" class="drawer-close" id="drawerClose" aria-label="Закрыть">×</button><div id="drawerBody"></div></div>
+</aside>
+
+<script src="./js/config.js"></script>
+<script src="./js/data.js"></script>
+<script src="./js/app.js"></script>
+</body>
+</html>
