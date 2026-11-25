@@ -47,6 +47,12 @@
     }
   }
 
+  // Последние сохранённые данные (чтобы сразу что-то показать, пока таблица отвечает).
+  function cached() {
+    const c = readCache();
+    return c && Date.now() - c.at < CONFIG.CACHE_MINUTES * 60000 ? normalize(c.api) : null;
+  }
+
   function normalize(api) {
     const cols = api.factColumns;
     const facts = api.facts.map(r => { const o = {}; cols.forEach((c, i) => { o[c] = r[i]; }); return o; });
@@ -169,12 +175,21 @@
 
   // ---------- форматирование ----------
   const nf = new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 0});
+  const nf2 = new Intl.NumberFormat('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  // Короткая запись больших сумм: 6,0 млн ₸, 850 тыс ₸.
+  function fmtShort(v) {
+    if (v === null || v === undefined || !isFinite(v)) return '—';
+    const a = Math.abs(v);
+    if (a >= 1e6) return (v / 1e6).toFixed(1).replace('.', ',') + ' млн ₸';
+    if (a >= 1e4) return Math.round(v / 1e3) + ' тыс ₸';
+    return fmt(v, 'money');
+  }
   function fmt(v, kind) {
     if (v === null || v === undefined || (typeof v === 'number' && !isFinite(v))) return '—';
     if (kind === 'money') return nf.format(Math.round(v)) + ' ₸';
     if (kind === 'pct') return (v * 100).toFixed(1).replace('.', ',') + '%';
     if (kind === 'pct0') return nf.format(Math.round(v * 100)) + '%';
-    if (kind === 'usd') return '$' + (Math.round(v * 100) / 100).toFixed(2).replace('.', ',');
+    if (kind === 'usd') return '$' + nf2.format(v);
     return nf.format(Math.round(v));
   }
   function fmtMetric(key, v) { return fmt(v, (METRIC[key] || {}).fmt || 'int'); }
@@ -191,7 +206,7 @@
   }
   function rangeLabel(a, b) { return !a ? '—' : a === b ? dFull(a) : dShort(a) + '–' + dFull(b); }
 
-  window.Data = {BASE, METRICS, METRIC, DIR, PLAN_METRICS, load, normalize, filter, zero, add, derive, sum, byDirChannel, byUnit,
+  window.Data = {BASE, METRICS, METRIC, DIR, PLAN_METRICS, load, cached, normalize, fmtShort, filter, zero, add, derive, sum, byDirChannel, byUnit,
     unitTitle, byPeriod, planFor, forecast, iso, parse, addDays, monthStart, monthEnd, daysBetween, fmt, fmtMetric, dShort, dFull,
     monthLabel, weekday, periodLabel, rangeLabel};
 })();

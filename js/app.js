@@ -42,6 +42,10 @@
 
   async function reload(fresh) {
     const btn = $('reloadBtn'); btn.disabled = true;
+    if (!S.db) { // пока таблица отвечает (3–8 секунд), показываем последние сохранённые данные
+      const c = D.cached();
+      if (c) { S.db = c; S.fromCache = 'loading'; if (!S.from) applyPreset(S.preset || C.DEFAULT_PERIOD); clampPeriod(); render(); }
+    }
     if (S.db) $('view').classList.add('busy');
     try {
       const r = await D.load({fresh: fresh});
@@ -51,6 +55,7 @@
       clampPeriod();
       render();
     } catch (e) {
+      if (S.db) { S.fromCache = true; render(); return; }
       $('view').innerHTML = `<div class="error-box"><b>Не получилось загрузить данные из таблицы.</b><br>${esc(e.message)}<br><br>
         <button class="btn" data-action="retry">Попробовать ещё раз</button></div>`;
       $('updatedLabel').innerHTML = '<i class="warn"></i> Нет связи с таблицей';
@@ -101,8 +106,8 @@
     const t = tab();
     $('nav').innerHTML = TABS.map(x => `<button type="button" class="nav-btn ${x.id === S.tab ? 'active' : ''}" data-tab="${x.id}">${esc(x.label)}</button>`).join('');
     const upd = db.updated || '';
-    $('updatedLabel').innerHTML = S.fromCache
-      ? `<i class="warn"></i> Таблица не ответила, показаны сохранённые данные на ${esc(upd)}`
+    $('updatedLabel').innerHTML = S.fromCache === 'loading' ? `<i class="warn"></i> Данные на ${esc(upd)}, загружаю свежие…`
+      : S.fromCache ? `<i class="warn"></i> Таблица не ответила, показаны сохранённые данные на ${esc(upd)}`
       : `<i></i> Данные таблицы на ${esc(upd)} · обновляются каждый час`;
 
     // фильтры
@@ -164,11 +169,10 @@
       const attrs = opt.rowAttrs ? opt.rowAttrs(r) : '';
       return `<tr ${attrs}>${cols.map(c => `<td class="${c.num ? 'num' : ''} ${c.cls || ''}">${val(c, r)}</td>`).join('')}</tr>` + (opt.after ? opt.after(r) : '');
     }).join('') : `<tr><td colspan="${cols.length}" class="empty">${esc(opt.empty || 'Нет данных за выбранный период')}</td></tr>`;
-    const foot = tot && list.length ? `<tfoot><tr>${cols.map((c, i) => {
-      if (i === 0) return `<td>Итого по видимым строкам: ${list.length}</td>`;
-      if (c.noTotal || !(c.key in tot) || !c.fmt) return '<td></td>';
-      return `<td class="num">${D.fmt(tot[c.key], c.fmt)}</td>`;
-    }).join('')}</tr></tfoot>` : '';
+    const hasTot = c => !c.noTotal && c.fmt && tot && (c.key in tot);
+    let span = cols.findIndex((c, i) => i > 0 && hasTot(c)); if (span < 1) span = cols.length;
+    const foot = tot && list.length ? `<tfoot><tr><td colspan="${span}">Итого по видимым строкам: ${list.length}</td>${cols.slice(span).map(c =>
+      hasTot(c) ? `<td class="num">${D.fmt(tot[c.key], c.fmt)}</td>` : '<td></td>').join('')}</tr></tfoot>` : '';
     return `<div class="table-wrap ${opt.short ? 'short' : ''}"><table><thead><tr>${th}</tr></thead><tbody>${body}</tbody>${foot}</table></div>`;
   }
   function tableTools(id, opt) {
@@ -208,9 +212,9 @@
   // ---------- общие кусочки ----------
   function titleCell(r) {
     const link = safeUrl(r.link);
-    return `<button type="button" class="unit-link" data-unit="${esc(r.key)}">${esc(r.title)}</button>` +
-      (link ? `<a class="ext" href="${esc(link)}" target="_blank" rel="noreferrer" title="Открыть публикацию">↗</a>` : '') +
-      (r.code ? `<span class="code">${esc(r.code)}</span>` : '');
+    const sub = [r.code ? esc(r.code) : '', link ? `<a class="ext" href="${esc(link)}" target="_blank" rel="noreferrer" title="Открыть публикацию в новой вкладке">открыть ↗</a>` : ''].filter(Boolean).join(' · ');
+    return `<button type="button" class="unit-link" data-unit="${esc(r.key)}" title="${esc(r.title)}">${esc(r.title)}</button>` +
+      (sub ? `<span class="code">${sub}</span>` : '');
   }
   function igViews(r) {
     const ig = r.info && r.info.instagram;
@@ -291,7 +295,7 @@
     const grad = parts.map(p => { const a = acc / all * 360, b = (acc += p[1]) / all * 360; return `${DIR_COLOR[p[0]]} ${a}deg ${Math.max(a, b - 1)}deg, #fff ${Math.max(a, b - 1)}deg ${b}deg`; }).join(', ');
     h += `<div class="two-col"><div class="panel"><div class="panel-head"><div><h2>Воронка</h2><p>От охвата до продажи. Конверсия больше 100% не показывается: часть анкет приходит не через бота.</p></div></div><div class="funnel">${funnel}</div></div>
       <div class="panel"><div class="panel-head"><div><h2>${donutBy === 'revenue' ? 'Сумма продаж' : 'Анкеты'} по направлениям</h2><p>Доля каждого направления.</p></div></div>
-      <div class="attribution"><div class="donut" style="background:${all ? `conic-gradient(${grad})` : '#eef1f5'}"><span>${all ? M(donutBy, all) : '—'}</span><small>${donutBy === 'revenue' ? 'сумма продаж' : 'анкеты'}</small></div>
+      <div class="attribution"><div class="donut" style="background:${all ? `conic-gradient(${grad})` : '#eef1f5'}"><span>${all ? (donutBy === 'revenue' ? D.fmtShort(all) : M(donutBy, all)) : '—'}</span><small>${donutBy === 'revenue' ? 'сумма продаж' : 'анкеты'}</small></div>
       <div class="legend-list">${parts.map(p => `<div class="legend-row"><i style="background:${DIR_COLOR[p[0]]}"></i><span>${esc(p[0])}</span><b>${M(donutBy, p[1])}</b><em>${D.fmt(p[1] / all, 'pct0')}</em></div>`).join('') || '<span class="muted">Нет данных</span>'}</div></div></div></div>`;
 
     h += topPanel('summary', unitRows(rows, {unknown: false}), `Топ-${C.TOP_N} публикаций и креативов`, 'Самые результативные за период. Нажмите на название, чтобы открыть карточку.');
@@ -354,7 +358,7 @@
     const unitCost = units.some(u => u.cost > 0);
     const cols = [COL.pub, COL.chan, COL.title, COL.kw, COL.format]
       .concat(dir === 'Органика' ? [COL.views] : [])
-      .concat([metricCol('reach'), metricCol('actions', {label: 'Действия'}), metricCol('registrations'), metricCol('forms'), metricCol('valid'), metricCol('sales'), metricCol('revenue'),
+      .concat([metricCol('reach', {tip: 'У рилсов и пробников здесь просмотры (как в рабочей таблице), у остальных публикаций охват'}), metricCol('actions', {label: 'Действия'}), metricCol('registrations'), metricCol('forms'), metricCol('valid'), metricCol('sales'), metricCol('revenue'),
         metricCol('regToForm', {label: 'Рег. → анкета'})])
       .concat(unitCost ? [metricCol('cost'), metricCol('cpl', {label: 'CPL'})] : []);
     const st = S.ui['t:u-' + t0.id];
@@ -565,7 +569,7 @@
       ${(db.statuses || []).map(s => `<tr><td><b>${esc(s.source)}</b></td><td class="nowrap">${esc(s.updated)}</td><td>${esc(s.status)}</td></tr>`).join('')}</tbody></table></div></div>`;
 
     h += `<div class="panel"><div class="panel-head"><div><h2>Как считаются цифры</h2></div></div><ul class="check-list">
-      <li><b>Публикации и охват</b> ставятся на день публикации. Охват публикации из Instagram за всё время её жизни; у рилсов подписок Instagram не отдаёт.</li>
+      <li><b>Публикации и охват</b> ставятся на день публикации. Охват берётся из Instagram за всё время жизни публикации. У рилсов и пробников в «Охват» идут просмотры, как в рабочей таблице; настоящий охват виден в карточке. Подписок у рилсов Instagram не отдаёт.</li>
       <li><b>Регистрации</b>: вход в бота по ссылке с кодом. Повторный вход того же человека по той же ссылке не считается. Тестовые входы исключены.</li>
       <li><b>Анкеты</b> ставятся на день создания сделки в amoCRM, <b>продажи и сумма</b> на день оплаты. Направление и креатив по метке трафика или коду.</li>
       <li><b>Пробники</b>: рилсы, которых нет в ленте профиля (пробные). Отдельный канал в органике.</li>
