@@ -239,7 +239,9 @@
 
   const TOP_METRICS = ['revenue', 'sales', 'valid', 'forms', 'registrations', 'reach', 'actions'];
   function topPanel(id, units, title, text, def) {
-    const metric = ui('top:' + id, def || 'revenue');
+    // Если пользователь не выбрал показатель: первый, по которому за период есть результат (сумма → продажи → анкеты…).
+    const auto = [def || 'revenue'].concat(TOP_METRICS).find(k => units.some(u => (u[k] || 0) > 0)) || def || 'revenue';
+    const metric = ui('top:' + id, auto);
     const list = units.filter(u => (u[metric] || 0) > 0).sort((a, b) => b[metric] - a[metric] || b.revenue - a.revenue).slice(0, C.TOP_N);
     const max = list.length ? list[0][metric] : 0;
     const rows = list.map((u, i) => `<div class="top-row"><span>${i + 1}</span>
@@ -248,7 +250,7 @@
       <div class="bar"><i style="width:${max ? Math.max(2, u[metric] / max * 100) : 0}%"></i></div><b>${M(metric, u[metric])}</b></div>`).join('');
     return `<div class="panel"><div class="panel-head"><div><h2>${esc(title)}</h2><p>${text}</p></div>
       <div class="panel-tools"><label>Показатель <select data-ui="top:${id}">${TOP_METRICS.map(k => `<option value="${k}" ${k === metric ? 'selected' : ''}>${esc(D.METRIC[k].label.toLowerCase())}</option>`).join('')}</select></label></div></div>
-      ${rows ? `<div class="top-list">${rows}</div>` : `<div class="empty">За период нет ${esc(D.METRIC[metric].label.toLowerCase())}</div>`}</div>`;
+      ${rows ? `<div class="top-list">${rows}</div>` : `<div class="empty">За период по этому показателю пусто</div>`}</div>`;
   }
 
   // ================= Вкладка «Сводка» =================
