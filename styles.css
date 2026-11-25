@@ -189,6 +189,9 @@ tr.clickable { cursor: pointer }
 tr.open td { background: var(--blue-soft) }
 tr.details td { background: #fbfcfe; padding: 12px 16px }
 .day-list { display: grid; gap: 6px }
+td.pub-cell { min-width: 220px; max-width: 360px; white-space: normal }
+.pub-line { display: flex; gap: 6px; align-items: baseline; margin: 2px 0 }
+.pub-line .unit-link { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 280px; font-weight: 600 }
 .day-list div { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap }
 
 /* ---------- Топ ---------- */
