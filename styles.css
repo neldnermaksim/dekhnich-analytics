@@ -168,11 +168,13 @@ th.sorted.asc:after { content: " ↑" }
 td { font-size: 12px }
 tbody tr:hover td { background: #fafcff }
 .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap }
-tfoot td { background: #f1f4f8; font-weight: 750; border-top: 2px solid #ccd3de; position: sticky; bottom: 0; z-index: 1 }
+tfoot td { white-space: nowrap; background: #f1f4f8; font-weight: 750; border-top: 2px solid #ccd3de; position: sticky; bottom: 0; z-index: 1 }
 td.title-cell { min-width: 240px; max-width: 420px }
 .unit-link { border: 0; background: none; padding: 0; color: var(--ink); font-weight: 650; text-align: left; cursor: pointer; font-size: 12px }
+td.title-cell .unit-link { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden }
 .unit-link:hover { color: var(--blue); text-decoration: underline }
-.ext { margin-left: 6px; text-decoration: none; font-size: 12px }
+.ext { text-decoration: none; font: 600 11px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: var(--blue) }
+.ext:hover { text-decoration: underline }
 .code { font: 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); display: block; margin-top: 2px }
 .pill { display: inline-block; font-size: 10px; font-weight: 750; padding: 3px 6px; border-radius: 5px; white-space: nowrap }
 .pill.organic { background: var(--green-soft); color: var(--green) }
