@@ -207,6 +207,6 @@
   function rangeLabel(a, b) { return !a ? '—' : a === b ? dFull(a) : dShort(a) + '–' + dFull(b); }
 
   window.Data = {BASE, METRICS, METRIC, DIR, PLAN_METRICS, load, cached, normalize, fmtShort, filter, zero, add, derive, sum, byDirChannel, byUnit,
-    unitTitle, byPeriod, planFor, forecast, iso, parse, addDays, monthStart, monthEnd, daysBetween, fmt, fmtMetric, dShort, dFull,
+    unitTitle, byPeriod, bucketOf, planFor, forecast, iso, parse, addDays, monthStart, monthEnd, daysBetween, fmt, fmtMetric, dShort, dFull,
     monthLabel, weekday, periodLabel, rangeLabel};
 })();
